@@ -1,0 +1,13 @@
+[project]
+name = "flight-board"
+version = "0.1.0"
+description = "Homelab status board backend and frontend"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "fastapi",
+    "pydantic",
+    "uvicorn",
+]
+
+[tool.uv]
+package = false
