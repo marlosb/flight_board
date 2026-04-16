@@ -286,6 +286,9 @@ function transcoderEventText(event) {
     if (typeof rawEvent.message === "string" && rawEvent.message.trim().length > 0) {
       return rawEvent.message.trim();
     }
+    if (typeof rawEvent.type === "string" && rawEvent.type.trim().length > 0) {
+      return rawEvent.type.trim();
+    }
   }
   if (typeof event?.title === "string" && event.title.trim().length > 0) {
     return event.title.trim();
