@@ -253,6 +253,61 @@ function renderPiHoleTile(appStatus, uiTile = {}) {
   return tile;
 }
 
+function formatMonthDayHourMinute(value) {
+  if (typeof value !== "string" || value.length === 0) {
+    return "-- --:--";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-- --:--";
+  }
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}`;
+}
+
+function transcoderEventText(event) {
+  if (typeof event?.message === "string" && event.message.trim().length > 0) {
+    return event.message.trim();
+  }
+  const rawEvent = event?.payload?.event;
+  if (typeof rawEvent === "string" && rawEvent.trim().length > 0) {
+    return rawEvent.trim();
+  }
+  if (typeof event?.payload?.value === "string" && event.payload.value.trim().length > 0) {
+    return event.payload.value.trim();
+  }
+  if (rawEvent && typeof rawEvent === "object") {
+    if (typeof rawEvent.text === "string" && rawEvent.text.trim().length > 0) {
+      return rawEvent.text.trim();
+    }
+    if (typeof rawEvent.message === "string" && rawEvent.message.trim().length > 0) {
+      return rawEvent.message.trim();
+    }
+  }
+  if (typeof event?.title === "string" && event.title.trim().length > 0) {
+    return event.title.trim();
+  }
+  return "Waiting for event text.";
+}
+
+function renderTranscoderTile(appStatus, uiTile = {}) {
+  const tile = createTile(appTitle(appStatus), uiTile.size || "2x1");
+  const event = appStatus?.event;
+
+  if (!event) {
+    tile.appendChild(createInfoMessage("Waiting for first status update.", "warning"));
+    return tile;
+  }
+
+  const when = formatMonthDayHourMinute(event.created_at);
+  const text = transcoderEventText(event);
+  tile.appendChild(createInfoMessage(`${when} ${text}`, "neutral"));
+  return tile;
+}
+
 function renderPageErrorTile(message) {
   const tile = createTile("Flight Board", "1x1");
   tile.appendChild(createInfoMessage(message, "error"));
@@ -271,6 +326,9 @@ function renderOneTile(appStatus, uiTile) {
   }
   if (appStatus?.app_id === "pihole" && uiTile?.type === "status") {
     return renderPiHoleTile(appStatus, uiTile);
+  }
+  if (appStatus?.app_id === "transcoder" && uiTile?.type === "status") {
+    return renderTranscoderTile(appStatus, uiTile);
   }
   return renderGenericTile(appStatus, uiTile);
 }

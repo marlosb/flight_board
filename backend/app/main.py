@@ -22,6 +22,7 @@ from app.db.database import (
     get_latest_status_by_app,
     init_db,
     insert_app_event,
+    migrate_app_id,
     purge_app_events_older_than,
     upsert_app,
 )
@@ -156,14 +157,15 @@ def register_builtin_apps() -> None:
         enabled=True,
     )
     upsert_app(
-        app_id="transcoded",
-        display_name="Transcoded",
+        app_id="transcoder",
+        display_name="Transcoder",
         mode="push",
         api_key=None,
-        ui_path="backend/apps/transcoded/ui.json",
-        handler_path="backend/apps/transcoded/handler.py",
+        ui_path="backend/apps/transcoder/ui.json",
+        handler_path="backend/apps/transcoder/handler.py",
         enabled=True,
     )
+    migrate_app_id(old_app_id="transcoded", new_app_id="transcoder")
 
 
 def _load_handler_function(handler_path: str):
@@ -326,7 +328,7 @@ def _ensure_push_app_registered(app_name: str) -> None:
 
 @app.post("/events")
 def post_generic_app_event(request: AppEventRequest) -> dict[str, int | str]:
-    app_name = request.app_name.strip()
+    app_name = request.app_name.strip().lower()
     if not app_name:
         raise HTTPException(status_code=400, detail="app_name cannot be blank.")
 

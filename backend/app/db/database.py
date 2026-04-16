@@ -130,6 +130,38 @@ def upsert_app(
         connection.commit()
 
 
+def migrate_app_id(old_app_id: str, new_app_id: str) -> None:
+    with get_connection() as connection:
+        existing_old = connection.execute(
+            "SELECT app_id FROM apps WHERE app_id = ?;",
+            (old_app_id,),
+        ).fetchone()
+        if existing_old is None:
+            return
+        existing_new = connection.execute(
+            "SELECT app_id FROM apps WHERE app_id = ?;",
+            (new_app_id,),
+        ).fetchone()
+        if existing_new is None:
+            return
+        connection.execute(
+            """
+            UPDATE app_events
+            SET app_id = ?
+            WHERE app_id = ?;
+            """,
+            (new_app_id, old_app_id),
+        )
+        connection.execute(
+            """
+            DELETE FROM apps
+            WHERE app_id = ?;
+            """,
+            (old_app_id,),
+        )
+        connection.commit()
+
+
 def get_enabled_query_apps() -> list[sqlite3.Row]:
     with get_connection() as connection:
         return connection.execute(

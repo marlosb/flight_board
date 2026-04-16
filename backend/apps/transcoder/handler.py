@@ -9,7 +9,7 @@ def normalize_push_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "step": payload.get("step"),
         "event_type": payload.get("event_type", "push"),
         "status": payload.get("status", "unknown"),
-        "title": payload.get("title", "Transcoded update"),
+        "title": payload.get("title", "Transcoder update"),
         "message": payload.get("message", ""),
         "payload": payload.get("payload") if isinstance(payload.get("payload"), dict) else {},
         "parent_event_id": payload.get("parent_event_id"),

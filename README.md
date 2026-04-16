@@ -47,20 +47,10 @@ Invoke-RestMethod -Method Post `
   -Uri "http://127.0.0.1:8000/events" `
   -ContentType "application/json" `
   -Body '{
-    "app_name": "transcoded",
+    "app_name": "transcoder",
     "timestamp": "2026-04-16T19:25:18Z",
     "event": {
-      "event_type": "push",
-      "status": "ok",
-      "title": "Movie transcoding",
-      "message": "HandBrake job running",
-      "payload": {
-        "job_id": "job-123",
-        "source": "movie.mkv",
-        "target": "movie.mp4",
-        "progress": "42%",
-        "state": "running"
-      }
+      "text": "HandBrake job running (42%)"
     }
   }'
 ```

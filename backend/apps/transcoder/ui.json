@@ -1,0 +1,16 @@
+{
+  "app_id": "transcoder",
+  "display_name": "Transcoder",
+  "mode": "push",
+  "tiles": [
+    {
+      "id": "transcoder-latest",
+      "type": "status",
+      "title": "Transcoder Latest Event",
+      "size": "2x1"
+    }
+  ],
+  "fields": {
+    "status": ["created_at", "message"]
+  }
+}
