@@ -25,8 +25,8 @@ if command -v uv >/dev/null 2>&1 && [ -f "pyproject.toml" ] && [ -f "uv.lock" ];
   uv sync --frozen --no-dev
 fi
 
-if [ -x ".venv/bin/python" ] && ".venv/bin/python" -V >/dev/null 2>&1; then
-  PYTHON_BIN=".venv/bin/python"
+if [ -x "$REPO_DIR/.venv/bin/python" ] && "$REPO_DIR/.venv/bin/python" -V >/dev/null 2>&1; then
+  PYTHON_BIN="$REPO_DIR/.venv/bin/python"
 fi
 
 cd backend

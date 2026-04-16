@@ -3,7 +3,13 @@ name: Flight_Board
 services:
   myapp:
     image: flight_board:latest
+    labels:
+      icon: https://github.com/marlosb/flight_board/blob/master/frontend/assets/icons/icon.png?raw=true
     container_name: flight_board
     restart: unless-stopped
-    ports:
-      - "6667:8000"
+    environment:
+      JELLYFIN_KEY: ${JELLYFIN_KEY}
+      PIHOLE_KEY: ${PIHOLE_KEY}
+      AWAKER_KEY: ${AWAKER_KEY}
+      TZ: America/Sao_Paulo
+    network_mode: host
