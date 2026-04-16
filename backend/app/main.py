@@ -4,17 +4,17 @@ import importlib.util
 import json
 import logging
 import threading
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.db.database import (
     ensure_apps_schema,
-    get_app_by_api_key,
     get_enabled_app,
     get_enabled_apps_catalog,
     get_enabled_query_apps,
@@ -96,20 +96,13 @@ class AppRegistrationRequest(BaseModel):
 
 
 class AppEventRequest(BaseModel):
-    workflow_id: str | None = None
-    step: int | None = None
-    event_type: str | None = None
-    status: str | None = None
-    title: str | None = None
-    message: str | None = None
-    payload: dict[str, Any] | None = None
-    parent_event_id: int | None = None
+    app_name: str = Field(min_length=1)
+    timestamp: str = Field(min_length=1)
+    event: Any
 
 
 @app.post("/apps/register")
 def register_app(request: AppRegistrationRequest) -> dict[str, str]:
-    if request.mode == "push" and not request.api_key:
-        raise HTTPException(status_code=400, detail="Push apps must provide an api_key.")
     try:
         upsert_app(
             app_id=request.app_id,
@@ -160,6 +153,15 @@ def register_builtin_apps() -> None:
         api_key=None,
         ui_path="backend/apps/pihole/ui.json",
         handler_path="backend/apps/pihole/handler.py",
+        enabled=True,
+    )
+    upsert_app(
+        app_id="transcoded",
+        display_name="Transcoded",
+        mode="push",
+        api_key=None,
+        ui_path="backend/apps/transcoded/ui.json",
+        handler_path="backend/apps/transcoded/handler.py",
         enabled=True,
     )
 
@@ -260,31 +262,89 @@ def _load_ui_config(ui_path: str) -> dict[str, Any]:
         ) from exc
 
 
-@app.post("/apps/{app_id}/events")
-def post_app_event(
-    app_id: str,
-    request: AppEventRequest,
-    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
-) -> dict[str, int | str]:
-    if not x_api_key:
-        raise HTTPException(status_code=401, detail="Missing X-API-Key header.")
+def _humanize_app_name(app_name: str) -> str:
+    tokens = app_name.replace("_", " ").replace("-", " ").split()
+    if not tokens:
+        return app_name
+    return " ".join(token.capitalize() for token in tokens)
 
-    app_row = get_app_by_api_key(app_id=app_id, api_key=x_api_key)
-    if app_row is None:
-        raise HTTPException(status_code=401, detail="Invalid app_id or API key.")
-    if int(app_row["enabled"]) != 1:
-        raise HTTPException(status_code=403, detail="App is disabled.")
+
+def _normalize_timestamp(raw_timestamp: str) -> str:
+    timestamp = raw_timestamp.strip()
+    if not timestamp:
+        raise HTTPException(status_code=400, detail="timestamp cannot be blank.")
+    normalized = timestamp.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="timestamp must be ISO-8601.") from exc
+    return parsed.isoformat()
+
+
+def _normalize_event_payload(event_value: Any) -> dict[str, Any]:
+    if isinstance(event_value, dict):
+        return event_value
+    return {"value": event_value}
+
+
+def _event_record_fields(
+    event_payload: dict[str, Any],
+) -> tuple[str | None, str | None, str | None, str | None, dict[str, Any]]:
+    event_type = event_payload.get("event_type")
+    status = event_payload.get("status")
+    title = event_payload.get("title")
+    message = event_payload.get("message")
+    payload = event_payload.get("payload")
+
+    if not isinstance(event_type, str):
+        event_type = "push"
+    if not isinstance(status, str):
+        status = None
+    if not isinstance(title, str):
+        title = None
+    if not isinstance(message, str):
+        message = None
+    if not isinstance(payload, dict):
+        payload = {"event": event_payload}
+    return event_type, status, title, message, payload
+
+
+def _ensure_push_app_registered(app_name: str) -> None:
+    existing_app = get_enabled_app(app_name)
+    if existing_app is not None:
+        return
+    upsert_app(
+        app_id=app_name,
+        display_name=_humanize_app_name(app_name),
+        mode="push",
+        api_key=None,
+        ui_path="backend/apps/template/ui.json",
+        handler_path="backend/apps/template/handler.py",
+        enabled=True,
+    )
+
+
+@app.post("/events")
+def post_generic_app_event(request: AppEventRequest) -> dict[str, int | str]:
+    app_name = request.app_name.strip()
+    if not app_name:
+        raise HTTPException(status_code=400, detail="app_name cannot be blank.")
+
+    _ensure_push_app_registered(app_name)
+    event_payload = _normalize_event_payload(request.event)
+    event_type, status, title, message, payload = _event_record_fields(event_payload)
 
     event_id = insert_app_event(
-        app_id=app_id,
-        workflow_id=request.workflow_id,
-        step=request.step,
-        event_type=request.event_type,
-        status=request.status,
-        title=request.title,
-        message=request.message,
-        payload=request.payload,
-        parent_event_id=request.parent_event_id,
+        app_id=app_name,
+        workflow_id=None,
+        step=None,
+        event_type=event_type,
+        status=status,
+        title=title,
+        message=message,
+        payload=payload,
+        parent_event_id=None,
+        created_at=_normalize_timestamp(request.timestamp),
     )
     return {"status": "ok", "event_id": event_id}
 

@@ -130,18 +130,6 @@ def upsert_app(
         connection.commit()
 
 
-def get_app_by_api_key(app_id: str, api_key: str) -> sqlite3.Row | None:
-    with get_connection() as connection:
-        return connection.execute(
-            """
-            SELECT app_id, enabled
-            FROM apps
-            WHERE app_id = ? AND api_key = ?;
-            """,
-            (app_id, api_key),
-        ).fetchone()
-
-
 def get_enabled_query_apps() -> list[sqlite3.Row]:
     with get_connection() as connection:
         return connection.execute(
@@ -188,14 +176,15 @@ def insert_app_event(
     message: str | None,
     payload: dict[str, Any] | None,
     parent_event_id: int | None,
+    created_at: str | None = None,
 ) -> int:
     with get_connection() as connection:
         cursor = connection.execute(
             """
             INSERT INTO app_events (
-                app_id, workflow_id, step, event_type, status, title, message, payload_json, parent_event_id
+                app_id, workflow_id, step, event_type, status, title, message, payload_json, parent_event_id, created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')));
             """,
             (
                 app_id,
@@ -207,6 +196,7 @@ def insert_app_event(
                 message,
                 json.dumps(payload) if payload is not None else None,
                 parent_event_id,
+                created_at,
             ),
         )
         connection.commit()

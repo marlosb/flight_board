@@ -1,0 +1,17 @@
+{
+  "app_id": "transcoded",
+  "display_name": "Transcoded",
+  "mode": "push",
+  "tiles": [
+    {
+      "id": "transcoded-latest",
+      "type": "status",
+      "title": "Transcoded Latest Status",
+      "size": "2x1"
+    }
+  ],
+  "fields": {
+    "status": ["status", "title", "message"],
+    "payload": ["job_id", "source", "target", "progress", "state"]
+  }
+}

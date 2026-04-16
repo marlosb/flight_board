@@ -5,7 +5,7 @@ Homelab status dashboard with:
 - **Frontend:** HTML/CSS/vanilla JS (tile grid)
 - **Storage:** SQLite (`data/sqlite/status_board.db`)
 
-## Authentication environment variables
+## Integration environment variables
 
 Set these before running the server/container:
 
@@ -32,6 +32,37 @@ Set-Item Env:JELLYFIN_KEY "<your-jellyfin-api-key>"
 Set-Item Env:PIHOLE_KEY "<your-pihole-password>"
 Set-Location .\backend
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+## Push status updates (generic for all apps)
+
+Push-mode apps post events to:
+
+`POST /events`
+
+Example:
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/events" `
+  -ContentType "application/json" `
+  -Body '{
+    "app_name": "transcoded",
+    "timestamp": "2026-04-16T19:25:18Z",
+    "event": {
+      "event_type": "push",
+      "status": "ok",
+      "title": "Movie transcoding",
+      "message": "HandBrake job running",
+      "payload": {
+        "job_id": "job-123",
+        "source": "movie.mkv",
+        "target": "movie.mp4",
+        "progress": "42%",
+        "state": "running"
+      }
+    }
+  }'
 ```
 
 ## Container startup script

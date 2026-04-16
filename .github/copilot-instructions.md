@@ -18,7 +18,8 @@ Build a single-user homelab dashboard that consolidates status and ongoing tasks
 - Expose `POST` routes for apps to push updates.
 - Expose `GET` routes for frontend data retrieval.
 - Support two status ingestion modes per app: pushed updates via POST and on-demand queried status.
-- Push route authentication uses `X-API-Key` per app.
+- Push updates use a generic body schema: `app_name`, `timestamp`, and `event`.
+- Push routes are unauthenticated because apps run in an isolated private network.
 - Query-mode apps are refreshed on status GET.
 
 ## App Definition
