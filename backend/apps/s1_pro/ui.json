@@ -1,0 +1,16 @@
+{
+  "app_id": "s1_pro",
+  "display_name": "S1 Pro",
+  "mode": "query",
+  "tiles": [
+    {
+      "id": "s1-pro-status",
+      "type": "status",
+      "title": "S1 Pro Status",
+      "size": "1x1"
+    }
+  ],
+  "fields": {
+    "status": ["state", "filename", "progress", "layers"]
+  }
+}

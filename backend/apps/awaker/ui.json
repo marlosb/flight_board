@@ -1,0 +1,17 @@
+{
+  "app_id": "awaker",
+  "display_name": "Awaker",
+  "mode": "query",
+  "tiles": [
+    {
+      "id": "awaker-latest",
+      "type": "status",
+      "title": "Awaker Latest Commands",
+      "size": "2x1"
+    }
+  ],
+  "fields": {
+    "status": ["status", "message"],
+    "payload": ["commands_count", "commands"]
+  }
+}

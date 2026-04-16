@@ -1,0 +1,16 @@
+{
+  "app_id": "jellyfin",
+  "display_name": "Jellyfin",
+  "mode": "query",
+  "tiles": [
+    {
+      "id": "jellyfin-recent-activity",
+      "type": "activity",
+      "title": "Jellyfin Recent Activity",
+      "size": "2x1"
+    }
+  ],
+  "fields": {
+    "activities": ["title", "type", "user", "created_at", "description"]
+  }
+}

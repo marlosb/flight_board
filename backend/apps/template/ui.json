@@ -1,0 +1,10 @@
+{
+  "app_id": "template",
+  "display_name": "Template App",
+  "mode": "push",
+  "tiles": [],
+  "fields": {
+    "status": ["state", "summary"],
+    "tasks": ["name", "state", "updated_at"]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "app_id": "template",
+  "state": "running",
+  "summary": "Processing backlog",
+  "tasks": [
+    {
+      "name": "sync-job",
+      "state": "in_progress",
+      "updated_at": "2026-04-13T20:00:00Z"
+    }
+  ]
+}

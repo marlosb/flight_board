@@ -1,0 +1,16 @@
+{
+  "app_id": "pihole",
+  "display_name": "Pi-hole",
+  "mode": "query",
+  "tiles": [
+    {
+      "id": "pihole-summary",
+      "type": "status",
+      "title": "Pi-hole Summary",
+      "size": "1x1"
+    }
+  ],
+  "fields": {
+    "status": ["total", "blocked", "percent_blocked"]
+  }
+}
