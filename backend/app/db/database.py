@@ -174,6 +174,23 @@ def get_enabled_query_apps() -> list[sqlite3.Row]:
         ).fetchall()
 
 
+def has_recent_event_for_app(app_id: str, within_minutes: int) -> bool:
+    if within_minutes <= 0:
+        return False
+    with get_connection() as connection:
+        row = connection.execute(
+            """
+            SELECT 1
+            FROM app_events
+            WHERE app_id = ? AND created_at >= datetime('now', ?)
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1;
+            """,
+            (app_id, f"-{within_minutes} minutes"),
+        ).fetchone()
+    return row is not None
+
+
 def get_enabled_app(app_id: str) -> sqlite3.Row | None:
     with get_connection() as connection:
         return connection.execute(

@@ -21,6 +21,7 @@ from app.db.database import (
     get_latest_status_for_app,
     get_latest_status_by_app,
     get_recent_events_for_app,
+    has_recent_event_for_app,
     init_db,
     insert_app_event,
     migrate_app_id,
@@ -33,6 +34,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 EVENT_RETENTION_DAYS = 30
 CLEANUP_INTERVAL_SECONDS = 86400
+QUERY_REFRESH_INTERVAL_MINUTES = 30
 
 logger = logging.getLogger(__name__)
 _cleanup_stop_event = threading.Event()
@@ -202,6 +204,9 @@ def refresh_query_apps() -> None:
     register_builtin_apps()
     query_apps = get_enabled_query_apps()
     for query_app in query_apps:
+        app_id = str(query_app["app_id"])
+        if has_recent_event_for_app(app_id, QUERY_REFRESH_INTERVAL_MINUTES):
+            continue
         fetch_fn = _load_handler_function(str(query_app["handler_path"]))
         payload = fetch_fn()
         if not isinstance(payload, dict):
@@ -210,7 +215,7 @@ def refresh_query_apps() -> None:
                 detail=f"Query handler returned invalid payload for app {query_app['app_id']}.",
             )
         insert_app_event(
-            app_id=str(query_app["app_id"]),
+            app_id=app_id,
             workflow_id=payload.get("workflow_id"),
             step=payload.get("step"),
             event_type=payload.get("event_type"),
@@ -227,6 +232,8 @@ def refresh_query_app(app_id: str) -> None:
     if app_row is None:
         raise HTTPException(status_code=404, detail=f"App not found or disabled: {app_id}")
     if app_row["mode"] != "query":
+        return
+    if has_recent_event_for_app(app_id, QUERY_REFRESH_INTERVAL_MINUTES):
         return
 
     fetch_fn = _load_handler_function(str(app_row["handler_path"]))
