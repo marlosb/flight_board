@@ -34,7 +34,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 EVENT_RETENTION_DAYS = 30
 CLEANUP_INTERVAL_SECONDS = 86400
-QUERY_REFRESH_INTERVAL_MINUTES = 30
+PIHOLE_QUERY_REFRESH_INTERVAL_MINUTES = 30
 
 logger = logging.getLogger(__name__)
 _cleanup_stop_event = threading.Event()
@@ -205,7 +205,7 @@ def refresh_query_apps() -> None:
     query_apps = get_enabled_query_apps()
     for query_app in query_apps:
         app_id = str(query_app["app_id"])
-        if has_recent_event_for_app(app_id, QUERY_REFRESH_INTERVAL_MINUTES):
+        if app_id == "pihole" and has_recent_event_for_app(app_id, PIHOLE_QUERY_REFRESH_INTERVAL_MINUTES):
             continue
         fetch_fn = _load_handler_function(str(query_app["handler_path"]))
         payload = fetch_fn()
@@ -233,7 +233,7 @@ def refresh_query_app(app_id: str) -> None:
         raise HTTPException(status_code=404, detail=f"App not found or disabled: {app_id}")
     if app_row["mode"] != "query":
         return
-    if has_recent_event_for_app(app_id, QUERY_REFRESH_INTERVAL_MINUTES):
+    if app_id == "pihole" and has_recent_event_for_app(app_id, PIHOLE_QUERY_REFRESH_INTERVAL_MINUTES):
         return
 
     fetch_fn = _load_handler_function(str(app_row["handler_path"]))

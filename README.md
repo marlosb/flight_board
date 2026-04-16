@@ -22,10 +22,10 @@ If any required variable is missing, that app tile will show an error status.
 - `app_events` rows older than **30 days** are purged automatically.
 - Cleanup runs once at server startup and then daily in a background job.
 
-## Query mode refresh interval
+## Pi-hole refresh interval
 
-- Query-mode apps are refreshed at most once every **30 minutes**.
-- If a query app already has an event newer than 30 minutes, the board uses the latest status from SQLite instead of querying the external app again.
+- Pi-hole is refreshed at most once every **30 minutes**.
+- If Pi-hole already has an event newer than 30 minutes, the board uses the latest status from SQLite instead of querying Pi-hole again.
 
 ## Run locally (Windows PowerShell)
 
