@@ -298,16 +298,33 @@ function transcoderEventText(event) {
 
 function renderTranscoderTile(appStatus, uiTile = {}) {
   const tile = createTile(appTitle(appStatus), uiTile.size || "2x1");
-  const event = appStatus?.event;
+  const events = Array.isArray(appStatus?.recent_events)
+    ? appStatus.recent_events.slice(0, 3)
+    : [];
 
-  if (!event) {
-    tile.appendChild(createInfoMessage("Waiting for first status update.", "warning"));
+  if (events.length === 0) {
+    const event = appStatus?.event;
+    if (!event) {
+      tile.appendChild(createInfoMessage("Waiting for first status update.", "warning"));
+      return tile;
+    }
+    const when = formatMonthDayHourMinute(event.created_at);
+    const text = transcoderEventText(event);
+    tile.appendChild(createInfoMessage(`${when} ${text}`, "neutral"));
     return tile;
   }
 
-  const when = formatMonthDayHourMinute(event.created_at);
-  const text = transcoderEventText(event);
-  tile.appendChild(createInfoMessage(`${when} ${text}`, "neutral"));
+  const list = document.createElement("ul");
+  list.className = "activity-list";
+  events.forEach((eventItem) => {
+    const item = document.createElement("li");
+    item.className = "activity-item";
+    const when = formatMonthDayHourMinute(eventItem?.created_at);
+    const text = transcoderEventText(eventItem);
+    item.textContent = `${when} ${text}`;
+    list.appendChild(item);
+  });
+  tile.appendChild(list);
   return tile;
 }
 

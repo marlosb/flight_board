@@ -20,6 +20,7 @@ from app.db.database import (
     get_enabled_query_apps,
     get_latest_status_for_app,
     get_latest_status_by_app,
+    get_recent_events_for_app,
     init_db,
     insert_app_event,
     migrate_app_id,
@@ -378,11 +379,13 @@ def get_apps_catalog() -> dict[str, list[dict[str, Any]]]:
 
 
 @app.get("/apps/{app_id}/status/latest")
-def get_app_latest_status(app_id: str) -> dict[str, dict[str, Any]]:
+def get_app_latest_status(app_id: str) -> dict[str, Any]:
     register_builtin_apps()
     refresh_query_app(app_id)
     app_status = get_latest_status_for_app(app_id)
     if app_status is None:
         raise HTTPException(status_code=404, detail=f"App not found or disabled: {app_id}")
+    if app_id == "transcoder":
+        app_status["recent_events"] = get_recent_events_for_app(app_id, limit=3)
     app_status["ui"] = _load_ui_config(str(app_status["ui_path"]))
     return {"app": app_status}

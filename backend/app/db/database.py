@@ -361,6 +361,53 @@ def get_latest_status_for_app(app_id: str) -> dict[str, Any] | None:
     }
 
 
+def get_recent_events_for_app(app_id: str, limit: int = 3) -> list[dict[str, Any]]:
+    if limit <= 0:
+        return []
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT
+                id,
+                workflow_id,
+                step,
+                event_type,
+                status,
+                title,
+                message,
+                payload_json,
+                parent_event_id,
+                created_at
+            FROM app_events
+            WHERE app_id = ?
+            ORDER BY created_at DESC, id DESC
+            LIMIT ?;
+            """,
+            (app_id, limit),
+        ).fetchall()
+
+    recent_events: list[dict[str, Any]] = []
+    for row in rows:
+        payload = None
+        if row["payload_json"]:
+            payload = json.loads(row["payload_json"])
+        recent_events.append(
+            {
+                "id": row["id"],
+                "workflow_id": row["workflow_id"],
+                "step": row["step"],
+                "event_type": row["event_type"],
+                "status": row["status"],
+                "title": row["title"],
+                "message": row["message"],
+                "payload": payload,
+                "parent_event_id": row["parent_event_id"],
+                "created_at": row["created_at"],
+            }
+        )
+    return recent_events
+
+
 def purge_app_events_older_than(days: int) -> int:
     if days <= 0:
         raise ValueError("days must be a positive integer")
