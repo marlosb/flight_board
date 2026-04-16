@@ -20,7 +20,12 @@ fi
 git pull --ff-only
 
 PYTHON_BIN="python"
-if [ -x ".venv/bin/python" ]; then
+
+if command -v uv >/dev/null 2>&1 && [ -f "pyproject.toml" ] && [ -f "uv.lock" ]; then
+  uv sync --frozen --no-dev
+fi
+
+if [ -x ".venv/bin/python" ] && ".venv/bin/python" -V >/dev/null 2>&1; then
   PYTHON_BIN=".venv/bin/python"
 fi
 
